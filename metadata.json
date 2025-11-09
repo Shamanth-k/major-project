@@ -1,0 +1,8 @@
+
+{
+  "name": "Aetherium Guard: Cyber & Legal Sims",
+  "description": "An interactive 3D gamified platform that uses AI to teach cybersecurity and legal principles through engaging simulations like Phishing Detective, Legal Loophole, Cyber Judge, and Legislation Architect. Features user analytics, leaderboards, and dynamically generated content for endless replayability.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
