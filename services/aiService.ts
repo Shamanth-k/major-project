@@ -156,7 +156,7 @@ export const generatePhishingEmail = async (
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-2.0-flash-lite",
       contents: `Generate a unique ${
         isPhishing ? "phishing" : "legitimate"
       } email for a level ${level} cybersecurity game. The difficulty is '${difficulty}'. ${
@@ -216,7 +216,7 @@ export const evaluateUserPhishingResponse = async (
     );
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-2.0-flash-lite",
     contents: `A user is playing a phishing detection game. Their reasoning for their choice was: "${userReason}". The correct explanation is: "${correctExplanation}". Evaluate if the user's reasoning is correct, partially correct, or incorrect. Provide a short, encouraging, and educational response to the user in a conversational tone, acting as a helpful AI assistant. Maximum 3 sentences.`,
   });
   return response.text || "Good effort! Keep learning.";
@@ -232,7 +232,7 @@ export const generateLegalLoophole = async (
       setTimeout(() => resolve(MOCK_LEGAL_LOOPHOLE), 500)
     );
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-2.0-flash-lite",
     contents: `Generate a fictional, short law for a legal education game at difficulty level ${level} for a '${difficulty}' challenge. The law must contain a subtle logical loophole. Also provide a one-sentence explanation of the loophole and a one-sentence suggestion on how to fix it. These must be very short and suitable for an AI assistant to speak. Format the response as a JSON object with keys: "lawText", "loopholeExplanation", and "fixSuggestion".`,
     config: {
       responseMimeType: "application/json",
@@ -265,7 +265,7 @@ export const evaluateUserLoopholeResponse = async (
       )
     );
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-2.0-flash-lite",
     contents: `In a legal game, a user suggested a loophole: "${userLoophole}". The actual loophole is: "${actualLoophole}". Briefly evaluate if the user was correct, partially correct, or on the wrong track in a single, encouraging sentence.`,
   });
   return response.text || "An interesting take!";
@@ -281,7 +281,7 @@ export const generateCyberJudgeCase = async (
       setTimeout(() => resolve(MOCK_CYBER_JUDGE_CASE), 500)
     );
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-2.0-flash-lite",
     contents: `Create a short, fictional court case summary for a 'Cyber Judge' game at difficulty level ${level} for a '${difficulty}' challenge. The case should be a cybercrime. Present brief arguments from prosecution and defense. Format as a JSON object with keys: "caseTitle", "caseSummary", "prosecutionArgument", "defenseArgument", and "suggestedVerdictWithReasoning" (this must be a single, decisive sentence summarizing the verdict).`,
     config: {
       responseMimeType: "application/json",
@@ -317,7 +317,7 @@ export const evaluateUserVerdict = async (
       )
     );
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-2.0-flash-lite",
     contents: `In a cyber judge game, a user rendered a verdict of '${userVerdict}' with the reasoning: "${userReasoning}". The suggested verdict was: "${suggestedVerdict}". Briefly evaluate the user's verdict in one respectful sentence while providing the official outcome.`,
   });
   return response.text || "Your judgment has been noted.";
@@ -334,7 +334,7 @@ export const generateLegislationSimulation = async (
       setTimeout(() => resolve(MOCK_SIMULATION), 500)
     );
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-2.0-flash-lite",
     contents: `A user has proposed the following law for a level ${level} simulation at '${difficulty}' difficulty: "${law}". As an AI political and social simulator, analyze the potential real-world consequences. Present the analysis as a narrative simulation. Format the response as a JSON object with keys: "title", "yearOne", "yearFive", and "yearTwenty". Each year's description should be a short, engaging, narrative summary (max 2-3 sentences).`,
     config: {
       responseMimeType: "application/json",
@@ -382,18 +382,37 @@ export const streamChatResponse = async (
     .map((m) => `${m.sender}: ${m.text}`)
     .join("\n");
 
-  const response = await ai.models.generateContentStream({
-    model: "gemini-2.0-flash-exp",
-    contents: fullPrompt,
-    config: {
-      systemInstruction:
-        "You are the friendly AI assistant for Aetherium Guard, a gamified training platform. Your purpose is to help users learn about cybersecurity and law through the platform's simulations. If asked who you are, identify yourself as the Aetherium Guard assistant.",
-    },
-  });
+  try {
+    const response = await ai.models.generateContentStream({
+      model: "gemini-2.0-flash-lite",
+      contents: fullPrompt,
+      config: {
+        systemInstruction:
+          "You are the friendly AI assistant for Aetherium Guard, a gamified training platform. Your purpose is to help users learn about cybersecurity and law through the platform's simulations. If asked who you are, identify yourself as the Aetherium Guard assistant.",
+      },
+    });
 
-  let accumulatedText = "";
-  for await (const chunk of response) {
-    accumulatedText += chunk.text;
-    onChunk(accumulatedText);
+    let accumulatedText = "";
+    for await (const chunk of response) {
+      accumulatedText += chunk.text;
+      onChunk(accumulatedText);
+    }
+  } catch (error: any) {
+    console.error("Chat API error:", error);
+
+    // Handle quota exceeded error
+    if (
+      error?.message?.includes("429") ||
+      error?.message?.includes("quota") ||
+      error?.message?.includes("RESOURCE_EXHAUSTED")
+    ) {
+      onChunk(
+        "⚠️ I'm experiencing high demand right now. The Aetherium Guard platform offers interactive cybersecurity and legal training through games like Phishing Detective, Legal Loophole, Cyber Judge, and Legislation Architect. Feel free to explore the games while I recover!"
+      );
+    } else {
+      onChunk(
+        "I apologize, but I'm having trouble connecting right now. Please try exploring the training simulations in the meantime!"
+      );
+    }
   }
 };

@@ -295,7 +295,7 @@ Generate:`,
         promptTemplates[Math.floor(Math.random() * promptTemplates.length)];
 
       const result = await this.genAI.models.generateContent({
-        model: "gemini-2.0-flash-exp",
+        model: "gemini-2.0-flash-lite",
         contents: prompt,
         config: {
           temperature: 1.0, // Maximum randomness for varied questions
@@ -390,7 +390,7 @@ Provide a brief, encouraging 2-3 sentence insight that:
 Keep it conversational, positive, and actionable.`;
 
       const result = await this.genAI.models.generateContent({
-        model: "gemini-2.0-flash-exp",
+        model: "gemini-2.0-flash-lite",
         contents: prompt,
       });
       return result.text || this.getMockInsight(preScore, postScore);
