@@ -14,10 +14,11 @@ export const generateAssessment = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { gameType, level, assessmentType } = req.body as {
+    const { gameType, level, assessmentType, forceRegenerate } = req.body as {
       gameType: GameType;
       level: number;
       assessmentType: "pre" | "post";
+      forceRegenerate?: boolean;
     };
 
     // Check if there's an existing assessment for this user/game/level/type
@@ -29,14 +30,36 @@ export const generateAssessment = async (
     });
 
     if (existing) {
-      // Always delete existing assessment to generate fresh questions
-      console.log(
-        "Deleting existing assessment to generate new questions with randomization"
+      const isSubmitted = existing.questions.some(
+        (q: any) => q.userAnswer !== undefined
       );
-      await Assessment.deleteOne({ _id: existing._id });
-    }
 
-    // Generate fresh questions ONLINE using Gemini (throws if API key missing)
+      if (!isSubmitted && !forceRegenerate) {
+        // Return existing unsubmitted assessment to avoid unnecessary API calls
+        console.log("Returning cached assessment to save API quota");
+        const publicAssessment = {
+          _id: existing._id,
+          gameType: existing.gameType,
+          level: existing.level,
+          assessmentType: existing.assessmentType,
+          questions: existing.questions.map((q: any) => ({
+            question: q.question,
+            options: q.options,
+          })),
+          totalQuestions: existing.totalQuestions,
+        };
+        res.status(200).json({ assessment: publicAssessment });
+        return;
+      } else {
+        // If submitted or force regenerate requested, delete it
+        console.log(
+          forceRegenerate
+            ? "Force regenerating assessment"
+            : "Deleting submitted assessment to allow retake"
+        );
+        await Assessment.deleteOne({ _id: existing._id });
+      }
+    } // Generate fresh questions ONLINE using Gemini (throws if API key missing)
     const questions = await geminiService.generateAssessment(
       gameType,
       Number(level),

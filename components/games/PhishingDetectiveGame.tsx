@@ -50,6 +50,9 @@ const PhishingDetectiveGame: React.FC<PhishingDetectiveGameProps> = ({
   const [email, setEmail] = useState<PhishingEmail | null>(null);
   const [loading, setLoading] = useState(false);
   const [userReason, setUserReason] = useState("");
+  const [emailCache, setEmailCache] = useState<Map<string, PhishingEmail>>(
+    new Map()
+  );
 
   const [fullFeedback, setFullFeedback] = useState(
     "Select your difficulty and choose a mission from the map."
@@ -91,6 +94,20 @@ const PhishingDetectiveGame: React.FC<PhishingDetectiveGameProps> = ({
     setFullFeedback("");
     setEmail(null);
 
+    // Check cache first
+    const cacheKey = `${level}-${difficulty}`;
+    const cachedEmail = emailCache.get(cacheKey);
+
+    if (cachedEmail) {
+      console.log("Using cached email for level", level);
+      setEmail(cachedEmail);
+      setFullFeedback(
+        `Mission ${level} Briefing: Analyze this incoming transmission for signs of deception.`
+      );
+      setLoading(false);
+      return;
+    }
+
     const timeoutPromise = new Promise<never>(
       (_, reject) =>
         setTimeout(() => reject(new Error("Request timed out")), 30000) // Increased to 30 seconds
@@ -101,7 +118,12 @@ const PhishingDetectiveGame: React.FC<PhishingDetectiveGameProps> = ({
         generatePhishingEmail(level, difficulty),
         timeoutPromise,
       ]);
-      setEmail(data as PhishingEmail);
+      const emailData = data as PhishingEmail;
+
+      // Cache the email
+      setEmailCache((prev) => new Map(prev).set(cacheKey, emailData));
+
+      setEmail(emailData);
       setFullFeedback(
         `Mission ${level} Briefing: Analyze this incoming transmission for signs of deception.`
       );

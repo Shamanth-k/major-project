@@ -26,7 +26,7 @@ async function testGeminiConnection() {
     console.log("\n📡 Sending test request to Gemini API...");
 
     const result = await genAI.models.generateContent({
-      model: "gemini-2.0-flash-lite",
+      model: "gemini-2.0-flash",
       contents: "Say 'Hello! API connection successful!' in exactly 5 words.",
     });
 
