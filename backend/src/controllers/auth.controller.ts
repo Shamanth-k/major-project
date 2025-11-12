@@ -37,10 +37,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     await user.save();
 
     // Generate JWT token
+    const jwtSecret = process.env.JWT_SECRET || "fallback-secret";
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET || "fallback-secret",
-      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+      jwtSecret,
+      { expiresIn: "7d" }
     );
 
     // Return user data (excluding password)
@@ -97,10 +98,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     await user.save();
 
     // Generate JWT token
+    const jwtSecret = process.env.JWT_SECRET || "fallback-secret";
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET || "fallback-secret",
-      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+      jwtSecret,
+      { expiresIn: "7d" }
     );
 
     res.json({

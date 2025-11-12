@@ -38,7 +38,7 @@ export const authenticate = async (
 
     // Attach user to request
     req.user = user;
-    req.userId = user._id.toString();
+    req.userId = String(user._id);
 
     next();
   } catch (error) {
