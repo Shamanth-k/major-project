@@ -12,6 +12,10 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Build argument for API key
+ARG GEMINI_API_KEY
+ENV VITE_GEMINI_API_KEY=${GEMINI_API_KEY}
+
 # Build the application
 RUN npm run build
 

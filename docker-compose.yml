@@ -31,7 +31,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=5000
-      - MONGODB_URI=mongodb://mongodb:27017/aetherium-guard
+      - MONGODB_URI=${MONGODB_URI}
       - CORS_ORIGIN=*
       - JWT_SECRET=${JWT_SECRET}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
